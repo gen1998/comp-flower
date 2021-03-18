@@ -13,6 +13,19 @@ class FlowerImgClassifier(nn.Module):
         x = self.model(x)
         return x
 
+import torch.nn.functional as F
+class Model(nn.Module):
+  def __init__(self):
+    super(Model,self).__init__()
+    self.fc1 = nn.Linear(10,100)
+    self.fc2 = nn.Linear(100,10)
+
+  def forward(self,x):
+    x = self.fc1(x)
+    x = F.relu(x)
+    x = self.fc2(x)
+    return x
+
 if __name__ == '__main__':
     DEVICE = torch.device("cuda:0")
-    model = FlowerImgClassifier("tf_efficientnet_b0", 4, pretrained=True).to(DEVICE)
+    model = Model("tf_efficientnet_b0", 4, pretrained=True).to(DEVICE)
