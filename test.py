@@ -28,4 +28,5 @@ class Model(nn.Module):
 
 if __name__ == '__main__':
     DEVICE = torch.device("cuda:0")
-    model = Model("tf_efficientnet_b0", 4).to(DEVICE)
+    #model = FlowerImgClassifier("tf_efficientnet_b0", 4, pretrained=True).to(DEVICE)
+    model = Model.to(DEVICE)
