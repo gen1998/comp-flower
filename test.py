@@ -35,7 +35,7 @@ class Net(nn.Module):
         return x
 
 if __name__ == '__main__':
-    DEVICE = torch.device("cuda:0")
+    DEVICE = torch.device("cuda")
     #model = FlowerImgClassifier("tf_efficientnet_b0", 4, pretrained=True).to(DEVICE)
     model = Net()
     model.to(DEVICE)
