@@ -1,4 +1,5 @@
 from torch import nn
+import torch
 import timm
 
 class FlowerImgClassifier(nn.Module):
