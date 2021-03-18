@@ -21,7 +21,7 @@ def main():
 
     # train 用 df の作成
     train_df = pd.DataFrame()
-    base_train_data_path = '../flowers-recognition/train/'
+    base_train_data_path = './flowers-recognition/train/'
 
     train_data_labels = ['daisy',
                         'dandelion',
@@ -46,7 +46,7 @@ def main():
     train = train_df
     seed_everything(config['seed'])
 
-    folds = StratifiedKFold(n_splits=config['fold_num'], shuffle=True, random_state=config['seed']).split(np.arange(train.shape[0]), train.label.values)    
+    folds = StratifiedKFold(n_splits=config['fold_num'], shuffle=True, random_state=config['seed']).split(np.arange(train.shape[0]), train.label.values)
     for fold, (trn_idx, val_idx) in enumerate(folds):
 
         if fold > 0: # 時間がかかるので最初のモデルのみ
