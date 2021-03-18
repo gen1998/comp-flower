@@ -13,4 +13,5 @@ class FlowerImgClassifier(nn.Module):
         return x
 
 if __name__ == '__main__':
-    model = FlowerImgClassifier("cuda:0", 4, pretrained=True).to("cuda:0")
+    DEVICE = torch.device("cuda:0")
+    model = FlowerImgClassifier("cuda:0", 4, pretrained=True).to(DEVICE)
