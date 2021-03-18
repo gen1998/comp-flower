@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.2.2-devel-ubuntu16.04
+FROM nvidia/cuda:11.2.2-devel-ubuntu18.04
 
 RUN apt-get update
 RUN apt-get install -y python3 python3-pip
