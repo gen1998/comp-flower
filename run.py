@@ -55,10 +55,7 @@ def main():
         print(f'Training with fold {fold} started (train:{len(trn_idx)}, val:{len(val_idx)})')
 
         train_loader, val_loader = prepare_dataloader(train, (config["img_size_h"], config["img_size_w"]), trn_idx, val_idx, train_bs=config["train_bs"], valid_bs=config["valid_bs"], num_workers=config["num_workers"] )
-        print("a")
         device = torch.device(config['device'])
-        print("b")
-
         model = FlowerImgClassifier(config['model_arch'], train.label.nunique(), pretrained=True).to(device)
         print("c")
 

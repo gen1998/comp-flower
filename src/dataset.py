@@ -15,7 +15,7 @@ from src.utils import *
 
 class FlowerDataset(Dataset):
     def __init__(self, df,
-                 shape, # 追加
+                 shape,
                  transforms=None,
                  output_label=True,
                  one_hot_label=False,
@@ -59,7 +59,9 @@ class FlowerImgClassifier(nn.Module):
     def __init__(self, model_arch, n_class, pretrained=True):
         super().__init__()
         self.model = timm.create_model(model_arch, pretrained=pretrained)
+        print("a")
         n_features = self.model.classifier.in_features
+        print("b")
         self.model.classifier = nn.Linear(n_features, n_class)
 
     def forward(self, x):
