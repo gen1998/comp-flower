@@ -67,6 +67,7 @@ def main():
         loss_fn = nn.CrossEntropyLoss().to(device)
 
         for epoch in range(config['epochs']):
+            print(epoch)
             train_one_epoch(epoch, model, loss_tr, optimizer, train_loader, device, config['verbose_step'],scheduler=scheduler, schd_batch_update=False)
 
             with torch.no_grad():
