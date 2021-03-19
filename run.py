@@ -185,7 +185,7 @@ def main():
     sub["class"] = sub["class"].map(label_dic)
     print(sub.value_counts("class"))
     logging.debug(sub.value_counts("class"))
-    sub.to_csv(f'output/{config["model_arch"]}_'+ '{0:%Y,%m/%d,%H:%M:%S}'.format(now) + '_submission.csv', index=False)
+    sub.to_csv(f'output/{config["model_arch"]}_'+ '{0:%Y%m%d%H%M%S}'.format(now) + '_submission.csv', index=False)
 
 
 
