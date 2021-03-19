@@ -52,6 +52,7 @@ def main():
     # train
     train = train_df
     seed_everything(config['seed'])
+    device = torch.device(config['device'])
 
     folds = StratifiedKFold(n_splits=config['fold_num'], shuffle=True, random_state=config['seed']).split(np.arange(train.shape[0]), train.label.values)
     for fold, (trn_idx, val_idx) in enumerate(folds):
@@ -62,24 +63,26 @@ def main():
         print(f'Training with fold {fold} started (train:{len(trn_idx)}, val:{len(val_idx)})')
 
         train_loader, val_loader = prepare_dataloader(train, (config["img_size_h"], config["img_size_w"]), trn_idx, val_idx, train_bs=config["train_bs"], valid_bs=config["valid_bs"], num_workers=config["num_workers"] )
-        device = torch.device(config['device'])
         model = FlowerImgClassifier(config['model_arch'], train.label.nunique(), pretrained=True).to(device)
-
         optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'], weight_decay=config['weight_decay'])
-
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=config['T_0'], T_mult=1, eta_min=config['min_lr'], last_epoch=-1)
+        er = EarlyStopping(config['patience'])
 
         loss_tr = nn.CrossEntropyLoss().to(device)
         loss_fn = nn.CrossEntropyLoss().to(device)
 
         for epoch in range(config['epochs']):
-            print(epoch)
             train_one_epoch(epoch, model, loss_tr, optimizer, train_loader, device, config['verbose_step'],scheduler=scheduler, schd_batch_update=False)
 
             with torch.no_grad():
-                valid_one_epoch(epoch, model, loss_fn, val_loader, device, config['verbose_step'], scheduler=None, schd_loss_update=False)
+                valid_loss = valid_one_epoch(epoch, model, loss_fn, val_loader, device, config['verbose_step'], scheduler=None, schd_loss_update=False)
 
-            torch.save(model.state_dict(),f'save/{config["model_arch"]}_fold_{fold}_{epoch}')
+            # Early Stopiing
+            if er.update(valid_loss) < 0:
+                break
+
+            if epoch == er.valid_epoch:
+                torch.save(model.state_dict(),f'save/{config["model_arch"]}_fold_{fold}_{epoch}')
 
         del model, optimizer, train_loader, val_loader,  scheduler
         torch.cuda.empty_cache()
@@ -141,13 +144,12 @@ def main():
 
     #for epoch in range(config['epochs']-3):
     fold = 0
-    for i, epoch in enumerate(config['used_epochs']):
-        model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_{fold}_{epoch}'))
+    model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_{fold}_{er.valid_epoch}'))
+    print(f"used_epoch : {er.valid_epoch}")
 
-        with torch.no_grad():
-            for _ in range(config['tta']):
-                val_preds += [config['weights'][i]/sum(config['weights'])*inference_one_epoch(model, val_loader, device)]
-                tst_preds += [config['weights'][i]/sum(config['weights'])*inference_one_epoch(model, tst_loader, device)]
+    with torch.no_grad():
+        val_preds = inference_one_epoch(model, val_loader, device)
+        tst_preds = inference_one_epoch(model, tst_loader, device)
 
     val_preds = np.mean(val_preds, axis=0)
     val_loss.append(log_loss(valid_.label.values, val_preds))

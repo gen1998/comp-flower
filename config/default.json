@@ -2,8 +2,8 @@
     "fold_num": 5,
     "seed": 6,
     "model_arch": "tf_efficientnet_b0",
-    "img_size_h": 200,
-    "img_size_w": 300,
+    "img_size_h": 240,
+    "img_size_w": 320,
     "epochs": 10,
     "train_bs": 128,
     "valid_bs": 128,
@@ -15,6 +15,7 @@
     "verbose_step": 1,
     "device": "cuda:0",
     "tta": 2,
+    "patience" : 3,
     "used_epochs": [
         6,7
     ],
