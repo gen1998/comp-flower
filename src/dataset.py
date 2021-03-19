@@ -69,23 +69,24 @@ class FlowerImgClassifier(nn.Module):
 class EarlyStopping:
     def __init__(self, patience):
         self.max_val_monitor = 1000
-        self.valid_epoch = -1
+        self.min_val_monitor = -1000
+        self.val_epoch = -1
         self.stop_count = 0
         self.patience = patience
 
     # mode = "min" or "max"(val_loss, val_accuracy)
     def update(self, monitor, epoch, mode):
         if mode == "max":
-            if monitor > self.max_val_monitor:
-                self.max_valid_loss = monitor
-                self.valid_epoch = epoch
+            if monitor > self.min_val_monitor:
+                self.min_val_monitor = monitor
+                self.val_epoch = epoch
                 self.stop_count = 0
             else:
                 self.stop_count+=1
         else:
             if monitor < self.max_val_monitor:
-                self.max_valid_loss = monitor
-                self.valid_epoch = epoch
+                self.max_val_monitor = monitor
+                self.val_epoch = epoch
                 self.stop_count = 0
             else:
                 self.stop_count+=1

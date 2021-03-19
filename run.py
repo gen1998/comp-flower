@@ -81,7 +81,7 @@ def main():
             if er.update(monitor[config["monitor"]], epoch, "max") < 0:
                 break
 
-            if epoch == er.valid_epoch:
+            if epoch == er.val_epoch:
                 torch.save(model.state_dict(),f'save/{config["model_arch"]}_fold_{fold}_{epoch}')
 
         del model, optimizer, train_loader, val_loader,  scheduler
@@ -144,8 +144,8 @@ def main():
 
     #for epoch in range(config['epochs']-3):
     fold = 0
-    model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_{fold}_{er.valid_epoch}'))
-    print(f"used_epoch : {er.valid_epoch}")
+    model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_{fold}_{er.val_epoch}'))
+    print(f"used_epoch : {er.val_epoch}")
 
     with torch.no_grad():
         val_preds += [inference_one_epoch(model, val_loader, device)]
