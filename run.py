@@ -129,9 +129,9 @@ def main():
         input_shape=(config["img_size_h"], config["img_size_w"])
 
         valid_ = train.loc[val_idx,:].reset_index(drop=True)
-        valid_ds = FlowerDataset(valid_, transforms=get_inference_transforms(input_shape), shape = input_shape, output_label=False)
+        valid_ds = FlowerDataset(valid_, transforms=get_valid_transforms(input_shape), shape = input_shape, output_label=False)
 
-        test_ds = FlowerDataset(test_df, transforms=get_inference_transforms(input_shape), shape=input_shape, output_label=False)
+        test_ds = FlowerDataset(test_df, transforms=get_valid_transforms(input_shape), shape=input_shape, output_label=False)
 
     val_loader = torch.utils.data.DataLoader(
             valid_ds,
