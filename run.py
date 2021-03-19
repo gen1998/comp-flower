@@ -140,9 +140,8 @@ def main():
     val_preds = []
 
     #for epoch in range(config['epochs']-3):
+    fold = 0
     for i, epoch in enumerate(config['used_epochs']):
-        if fold > 0: # 時間がかかるので最初のモデルのみ
-            break
         model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_{fold}_{epoch}'))
 
         with torch.no_grad():
@@ -151,7 +150,6 @@ def main():
                 tst_preds += [config['weights'][i]/sum(config['weights'])*inference_one_epoch(model, tst_loader, device)]
 
     val_preds = np.mean(val_preds, axis=0)
-    print(valid_.label.values, val_preds)
     val_loss.append(log_loss(valid_.label.values, val_preds))
     val_acc.append((valid_.label.values == np.argmax(val_preds, axis=1)).mean())
 
