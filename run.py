@@ -1,5 +1,7 @@
 import os
 import argparse
+import datetime
+import logging
 import json
 import pandas as pd
 import os
@@ -14,11 +16,21 @@ from src.dataset import *
 from src.utils import *
 
 def main():
+    # config file upload
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='./config/default.json')
-
     options = parser.parse_args()
     config = json.load(open(options.config))
+
+    # log file
+    now = datetime.datetime.now()
+    logging.basicConfig(
+        filename='./logs/log_' + config["model_arch"] + '_'+ '{0:%Y%m%d%H%M%S}.log'.format(now), level=logging.DEBUG
+    )
+    logging.debug('date : {0:%Y,%m/%d,%H:%M:%S}'.format(now))
+    log_list = ["img_size_h", "img_size_w", "train_bs", "monitor"]
+    for log_c in log_list:
+        logging.debug(f"{log_c} : {config[log_c]}")
 
     # train 用 df の作成
     train_df = pd.DataFrame()
@@ -78,7 +90,7 @@ def main():
                 monitor = valid_one_epoch(epoch, model, loss_fn, val_loader, device, config['verbose_step'], scheduler=None, schd_loss_update=False)
 
             # Early Stopiing
-            if er.update(monitor[config["monitor"]], epoch, "max") < 0:
+            if er.update(monitor[config["monitor"]], epoch, config["max"]) < 0:
                 break
 
             if epoch == er.val_epoch:
@@ -146,6 +158,9 @@ def main():
     fold = 0
     model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_{fold}_{er.val_epoch}'))
     print(f"used_epoch : {er.val_epoch}")
+    logging.debug(f'used_epoch : {er.val_epoch}')
+    log_monitor = er.max_val_monitor if config["mode"] == "min" else er.min_val_monitor
+    logging.debug(f'val_monitor : {log_monitor}')
 
     with torch.no_grad():
         val_preds += [inference_one_epoch(model, val_loader, device)]
