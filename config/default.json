@@ -4,7 +4,7 @@
     "model_arch": "tf_efficientnet_b0",
     "img_size_h": 250,
     "img_size_w": 350,
-    "epochs": 1,
+    "epochs": 10,
     "train_bs": 128,
     "valid_bs": 128,
     "T_0": 10,
