@@ -152,6 +152,7 @@ def main():
         tst_preds = inference_one_epoch(model, tst_loader, device)
 
     val_preds = np.mean(val_preds, axis=0)
+    print(log_loss(valid_.label.values, val_preds))
     val_loss.append(log_loss(valid_.label.values, val_preds))
     val_acc.append((valid_.label.values == np.argmax(val_preds, axis=1)).mean())
 
