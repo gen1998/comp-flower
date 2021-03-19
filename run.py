@@ -64,13 +64,11 @@ def main():
         train_loader, val_loader = prepare_dataloader(train, (config["img_size_h"], config["img_size_w"]), trn_idx, val_idx, train_bs=config["train_bs"], valid_bs=config["valid_bs"], num_workers=config["num_workers"] )
         device = torch.device(config['device'])
         model = FlowerImgClassifier(config['model_arch'], train.label.nunique(), pretrained=True).to(device)
-        print("c")
 
         optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'], weight_decay=config['weight_decay'])
-        print("d")
+
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=config['T_0'], T_mult=1, eta_min=config['min_lr'], last_epoch=-1)
 
-        print("e")
         loss_tr = nn.CrossEntropyLoss().to(device)
         loss_fn = nn.CrossEntropyLoss().to(device)
 
@@ -143,6 +141,8 @@ def main():
 
     #for epoch in range(config['epochs']-3):
     for i, epoch in enumerate(config['used_epochs']):
+        if fold > 0: # 時間がかかるので最初のモデルのみ
+            break
         model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_{fold}_{epoch}'))
 
         with torch.no_grad():
