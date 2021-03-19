@@ -148,8 +148,8 @@ def main():
     print(f"used_epoch : {er.valid_epoch}")
 
     with torch.no_grad():
-        val_preds += inference_one_epoch(model, val_loader, device)
-        tst_preds += inference_one_epoch(model, tst_loader, device)
+        val_preds += [inference_one_epoch(model, val_loader, device)]
+        tst_preds += [inference_one_epoch(model, tst_loader, device)]
 
     val_preds = np.mean(val_preds, axis=0)
     print(valid_.label.values)
