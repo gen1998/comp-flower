@@ -73,13 +73,22 @@ class EarlyStopping:
         self.stop_count = 0
         self.patience = patience
 
-    def update(self, monitor, epoch):
-        if monitor < self.max_val_monitor:
-            self.max_valid_loss = monitor
-            self.valid_epoch = epoch
-            self.stop_count = 0
+    # mode = "min" or "max"(val_loss, val_accuracy)
+    def update(self, monitor, epoch, mode):
+        if mode == "max":
+            if monitor > self.max_val_monitor:
+                self.max_valid_loss = monitor
+                self.valid_epoch = epoch
+                self.stop_count = 0
+            else:
+                self.stop_count+=1
         else:
-            self.stop_count+=1
+            if monitor < self.max_val_monitor:
+                self.max_valid_loss = monitor
+                self.valid_epoch = epoch
+                self.stop_count = 0
+            else:
+                self.stop_count+=1
 
         if self.stop_count > self.patience:
             return -1
