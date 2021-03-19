@@ -59,8 +59,12 @@ class FlowerImgClassifier(nn.Module):
     def __init__(self, model_arch, n_class, pretrained=True):
         super().__init__()
         self.model = timm.create_model(model_arch, pretrained=pretrained)
+        """
         n_features = self.model.classifier.in_features
         self.model.classifier = nn.Linear(n_features, n_class)
+        """
+        n_features = self.model.head.in_features
+        self.model.head = nn.Linear(n_features, n_class)
 
     def forward(self, x):
         x = self.model(x)
@@ -73,6 +77,7 @@ class EarlyStopping:
         self.val_epoch = -1
         self.stop_count = 0
         self.patience = patience
+        self.min_delta = 0
 
     # mode = "min" or "max"(val_loss, val_accuracy)
     def update(self, monitor, epoch, mode):
