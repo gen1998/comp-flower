@@ -40,8 +40,8 @@ def main():
 
     # test 用 df の作成
     test_df = pd.DataFrame()
-    base_test_data_path = '../flowers-recognition/test/'
-    test_df['image_path'] = [os.path.join(base_test_data_path, f) for f in os.listdir('../flowers-recognition/test/')]
+    base_test_data_path = './flowers-recognition/test/'
+    test_df['image_path'] = [os.path.join(base_test_data_path, f) for f in os.listdir('./flowers-recognition/test/')]
     test_df = test_df.sort_values('image_path').reset_index(drop=True)
 
     # train の label を数字にエンコードする
@@ -163,7 +163,7 @@ def main():
     tst_preds_label_all = np.argmax(tst_preds, axis=1)
 
     # 予測結果を保存
-    sub = pd.read_csv("../flowers-recognition/sample_submission.csv")
+    sub = pd.read_csv("./flowers-recognition/sample_submission.csv")
     sub['class'] = tst_preds_label_all
     label_dic = {0:"daisy", 1:"dandelion", 2:"rose",3:"sunflower", 4:"tulip"}
     sub["class"] = sub["class"].map(label_dic)
