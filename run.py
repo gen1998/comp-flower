@@ -7,6 +7,7 @@ import torch
 from torch import nn
 
 from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import  log_loss
 
 from src.augmentation import *
 from src.dataset import *
@@ -36,6 +37,12 @@ def main():
         one_label_df['label'] = one_label
         train_df = pd.concat([train_df, one_label_df])
     train_df = train_df.reset_index(drop=True)
+
+    # test 用 df の作成
+    test_df = pd.DataFrame()
+    base_test_data_path = '../input/flowers-recognition/test/'
+    test_df['image_path'] = [os.path.join(base_test_data_path, f) for f in os.listdir('../input/flowers-recognition/test/')]
+    test_df = test_df.sort_values('image_path').reset_index(drop=True)
 
     # train の label を数字にエンコードする
 
@@ -79,6 +86,91 @@ def main():
         del model, optimizer, train_loader, val_loader,  scheduler
         torch.cuda.empty_cache()
         print("\n")
+
+        print("pred start")
+
+    # infer
+    train = train_df
+    seed_everything(config['seed'])
+
+    folds = StratifiedKFold(n_splits=config['fold_num'], shuffle=True, random_state=config['seed']).split(np.arange(train.shape[0]), train.label.values)
+
+
+    tst_preds = []
+    val_loss = []
+    val_acc = []
+
+    # 行数を揃えた空のデータフレームを作成
+    cols = ['daisy',
+            'dandelion',
+            'rose',
+            'sunflower',
+            'tulip'
+           ]
+
+    for fold, (trn_idx, val_idx) in enumerate(folds):
+        if fold > 0: # 時間がかかるので最初のモデルのみ
+            break
+
+        print(' fold {} started'.format(fold))
+        input_shape=(config["img_size_h"], config["img_size_w"])
+
+        valid_ = train.loc[val_idx,:].reset_index(drop=True)
+        valid_ds = FlowerDataset(valid_, transforms=get_inference_transforms(input_shape), shape = input_shape, output_label=False)
+
+        test_ds = FlowerDataset(test_df, transforms=get_inference_transforms(input_shape), shape=input_shape, output_label=False)
+
+    val_loader = torch.utils.data.DataLoader(
+            valid_ds,
+            batch_size=config['valid_bs'],
+            num_workers=config['num_workers'],
+            shuffle=False,
+            pin_memory=False,
+        )
+
+    tst_loader = torch.utils.data.DataLoader(
+        test_ds,
+        batch_size=config['valid_bs'],
+        num_workers=config['num_workers'],
+        shuffle=False,
+        pin_memory=False,
+    )
+
+    device = torch.device(config['device'])
+    model = FlowerImgClassifier(config['model_arch'], train.label.nunique()).to(device)
+
+    val_preds = []
+
+    #for epoch in range(config['epochs']-3):
+    for i, epoch in enumerate(config['used_epochs']):
+        model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_{fold}_{epoch}'))
+
+        with torch.no_grad():
+            for _ in range(config['tta']):
+                val_preds += [config['weights'][i]/sum(config['weights'])*inference_one_epoch(model, val_loader, device)]
+                tst_preds += [config['weights'][i]/sum(config['weights'])*inference_one_epoch(model, tst_loader, device)]
+
+    val_preds = np.mean(val_preds, axis=0)
+    val_loss.append(log_loss(valid_.label.values, val_preds))
+    val_acc.append((valid_.label.values == np.argmax(val_preds, axis=1)).mean())
+
+    print('validation loss = {:.5f}'.format(np.mean(val_loss)))
+    print('validation accuracy = {:.5f}'.format(np.mean(val_acc)))
+    tst_preds = np.mean(tst_preds, axis=0)
+
+    del model
+    torch.cuda.empty_cache()
+    tst_preds_label_all = np.argmax(tst_preds, axis=1)
+
+    # 予測結果を保存
+    sub = pd.read_csv("../flowers-recognition/sample_submission.csv")
+    sub['class'] = tst_preds_label_all
+    label_dic = {0:"daisy", 1:"dandelion", 2:"rose",3:"sunflower", 4:"tulip"}
+    sub["class"] = sub["class"].map(label_dic)
+    print(sub.value_counts("class"))
+    sub.to_csv(f'output/submission.csv', index=False)
+
+
 
 if __name__ == '__main__':
     main()
