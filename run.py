@@ -78,7 +78,7 @@ def main():
                 valid_loss = valid_one_epoch(epoch, model, loss_fn, val_loader, device, config['verbose_step'], scheduler=None, schd_loss_update=False)
 
             # Early Stopiing
-            if er.update(valid_loss) < 0:
+            if er.update(valid_loss, epoch) < 0:
                 break
 
             if epoch == er.valid_epoch:
