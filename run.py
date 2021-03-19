@@ -40,8 +40,8 @@ def main():
 
     # test 用 df の作成
     test_df = pd.DataFrame()
-    base_test_data_path = '../input/flowers-recognition/test/'
-    test_df['image_path'] = [os.path.join(base_test_data_path, f) for f in os.listdir('../input/flowers-recognition/test/')]
+    base_test_data_path = '../flowers-recognition/test/'
+    test_df['image_path'] = [os.path.join(base_test_data_path, f) for f in os.listdir('../flowers-recognition/test/')]
     test_df = test_df.sort_values('image_path').reset_index(drop=True)
 
     # train の label を数字にエンコードする
