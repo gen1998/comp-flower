@@ -18,6 +18,7 @@
     "monitor" : "val_accuracy",
     "patience" : 3,
     "mode" : "max",
+    "psudo" : "True",
     "used_epochs": [
         6,7
     ],

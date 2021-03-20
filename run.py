@@ -48,6 +48,12 @@ def main():
         one_label_df['image_path'] = [os.path.join(one_label_paths, f) for f in os.listdir(one_label_paths)]
         one_label_df['label'] = one_label
         train_df = pd.concat([train_df, one_label_df])
+
+    if config["psudo"] == "True":
+        psudo = pd.read_csv("./flowers-recognition/psudo.csv")
+        train_df = pd.concat([train_df, psudo])
+
+    logging.debug(f'psudo : {config["psudo"]}')
     train_df = train_df.reset_index(drop=True)
 
     # test 用 df の作成
