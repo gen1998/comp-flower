@@ -1,0 +1,5 @@
+DEBUG:root:date : 2021,03/20,11:43:47
+DEBUG:root:img_size_h : 400
+DEBUG:root:img_size_w : 450
+DEBUG:root:train_bs : 128
+DEBUG:root:monitor : val_accuracy
