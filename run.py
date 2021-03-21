@@ -189,7 +189,7 @@ def main():
     sub_en = pd.read_csv("./flowers-recognition/sample_submission.csv")
     sub['class'] = tst_preds_label_all
     for i, label in enumerate(train_data_labels):
-        sub_en["{}".format(label)] = tst_preds_label_all[:, i]
+        sub_en["{}".format(label)] = tst_preds[:, i]
     label_dic = {0:"daisy", 1:"dandelion", 2:"rose",3:"sunflower", 4:"tulip"}
     sub["class"] = sub["class"].map(label_dic)
     print(sub.value_counts("class"))
