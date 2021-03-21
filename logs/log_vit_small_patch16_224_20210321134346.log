@@ -1,0 +1,6 @@
+DEBUG:root:date : 2021,03/21,13:43:46
+DEBUG:root:img_size_h : 384
+DEBUG:root:img_size_w : 384
+DEBUG:root:train_bs : 64
+DEBUG:root:monitor : val_accuracy
+DEBUG:root:psudo : True
