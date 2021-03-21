@@ -156,7 +156,7 @@ def main():
     )
 
     device = torch.device(config['device'])
-    model = FlowerImgClassifier(config['model_arch'], train.label.nunique()).to(device)
+    model = FlowerImgClassifier(config['model_arch'], train.label.nunique(), config["model_shape"]).to(device)
 
     val_preds = []
 
