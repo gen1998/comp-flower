@@ -1,7 +1,7 @@
 {
     "fold_num": 5,
     "seed": 6,
-    "model_arch": "tf_efficientnet_b4",
+    "model_arch": "tf_efficientnet_b0",
     "img_size_h": 250,
     "img_size_w": 300,
     "epochs": 1,
