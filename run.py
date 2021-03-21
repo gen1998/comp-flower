@@ -186,12 +186,15 @@ def main():
 
     # 予測結果を保存
     sub = pd.read_csv("./flowers-recognition/sample_submission.csv")
+    sub_en = pd.read_csv("./flowers-recognition/sample_submission.csv")
     sub['class'] = tst_preds_label_all
+    sub_en['class_en'] = tst_preds
     label_dic = {0:"daisy", 1:"dandelion", 2:"rose",3:"sunflower", 4:"tulip"}
     sub["class"] = sub["class"].map(label_dic)
     print(sub.value_counts("class"))
     logging.debug(sub.value_counts("class"))
-    sub.to_csv(f'output/{config["model_arch"]}_'+ '{0:%Y%m%d%H%M%S}'.format(now) + '_submission.csv', index=False)
+    #sub.to_csv(f'output/{config["model_arch"]}_'+ '{0:%Y%m%d%H%M%S}'.format(now) + '_submission.csv', index=False)
+    sub_en.to_csv(f'output/{config["model_arch"]}_'+ '{0:%Y%m%d%H%M%S}'.format(now) + '_preds.csv', index=False)
 
 
 
