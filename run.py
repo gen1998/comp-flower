@@ -81,7 +81,7 @@ def main():
         print(f'Training with fold {fold} started (train:{len(trn_idx)}, val:{len(val_idx)})')
 
         train_loader, val_loader = prepare_dataloader(train, (config["img_size_h"], config["img_size_w"]), trn_idx, val_idx, train_bs=config["train_bs"], valid_bs=config["valid_bs"], num_workers=config["num_workers"] )
-        model = FlowerImgClassifier(config['model_arch'], train.label.nunique(), pretrained=True).to(device)
+        model = FlowerImgClassifier(config['model_arch'], train.label.nunique(), config["model_shape"], pretrained=True).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'], weight_decay=config['weight_decay'])
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=config['T_0'], T_mult=1, eta_min=config['min_lr'], last_epoch=-1)
         er = EarlyStopping(config['patience'])
