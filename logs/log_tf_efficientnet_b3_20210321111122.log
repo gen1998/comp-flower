@@ -4,3 +4,12 @@ DEBUG:root:img_size_w : 450
 DEBUG:root:train_bs : 32
 DEBUG:root:monitor : val_accuracy
 DEBUG:root:psudo : True
+DEBUG:root:used_epoch : 5
+DEBUG:root:val_monitor : 0.975
+DEBUG:root:class
+dandelion    320
+tulip        297
+rose         236
+daisy        227
+sunflower    219
+dtype: int64
