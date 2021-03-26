@@ -66,6 +66,9 @@ class FlowerImgClassifier(nn.Module):
         elif model_shape == "head":
             n_features = self.model.head.in_features
             self.model.head = nn.Linear(n_features, n_class)
+        elif model_shape == "fc":
+            n_features = self.model.fc.in_features
+            self.model.fc = nn.Linear(n_features, n_class)
 
     def forward(self, x):
         x = self.model(x)
