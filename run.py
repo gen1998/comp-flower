@@ -178,7 +178,9 @@ def main():
 
     print('validation loss = {:.5f}'.format(np.mean(val_loss)))
     print('validation accuracy = {:.5f}'.format(np.mean(val_acc)))
+    print(tst_preds.shape)
     tst_preds = np.mean(tst_preds, axis=0)
+    print(tst_preds.shape)
 
     del model
     torch.cuda.empty_cache()
