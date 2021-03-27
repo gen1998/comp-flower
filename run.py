@@ -71,12 +71,13 @@ def main():
     train = train_df
     seed_everything(config['seed'])
     device = torch.device(config['device'])
+    val_epochs = []
 
     folds = StratifiedKFold(n_splits=config['fold_num'], shuffle=True, random_state=config['seed']).split(np.arange(train.shape[0]), train.label.values)
     for fold, (trn_idx, val_idx) in enumerate(folds):
 
-        if fold > 0: # 時間がかかるので最初のモデルのみ
-            break
+        #if fold > 0: # 時間がかかるので最初のモデルのみ
+            #break
 
         print(f'Training with fold {fold} started (train:{len(trn_idx)}, val:{len(val_idx)})')
 
@@ -102,9 +103,14 @@ def main():
             if epoch == er.val_epoch:
                 torch.save(model.state_dict(),f'save/{config["model_arch"]}_fold_{fold}_{epoch}')
 
+        val_epochs.append(er.val_epoch)
         del model, optimizer, train_loader, val_loader,  scheduler
         torch.cuda.empty_cache()
         print("\n")
+
+        logging.debug(f'used_epoch : {er.val_epoch}')
+        log_monitor = er.max_val_monitor if config["mode"] == "min" else er.min_val_monitor
+        logging.debug(f'val_monitor : {log_monitor}')
 
         print("pred start")
 
@@ -128,8 +134,8 @@ def main():
            ]
 
     for fold, (trn_idx, val_idx) in enumerate(folds):
-        if fold > 0: # 時間がかかるので最初のモデルのみ
-            break
+        #if fold > 0: # 時間がかかるので最初のモデルのみ
+            #break
 
         print(' fold {} started'.format(fold))
         input_shape=(config["img_size_h"], config["img_size_w"])
@@ -139,42 +145,36 @@ def main():
 
         test_ds = FlowerDataset(test_df, transforms=get_valid_transforms(input_shape), shape=input_shape, output_label=False)
 
-    val_loader = torch.utils.data.DataLoader(
-            valid_ds,
+        val_loader = torch.utils.data.DataLoader(
+                valid_ds,
+                batch_size=config['valid_bs'],
+                num_workers=config['num_workers'],
+                shuffle=False,
+                pin_memory=False,
+            )
+
+        tst_loader = torch.utils.data.DataLoader(
+            test_ds,
             batch_size=config['valid_bs'],
             num_workers=config['num_workers'],
             shuffle=False,
             pin_memory=False,
         )
 
-    tst_loader = torch.utils.data.DataLoader(
-        test_ds,
-        batch_size=config['valid_bs'],
-        num_workers=config['num_workers'],
-        shuffle=False,
-        pin_memory=False,
-    )
+        device = torch.device(config['device'])
+        model = FlowerImgClassifier(config['model_arch'], train.label.nunique(), config["model_shape"]).to(device)
 
-    device = torch.device(config['device'])
-    model = FlowerImgClassifier(config['model_arch'], train.label.nunique(), config["model_shape"]).to(device)
+        val_preds = []
 
-    val_preds = []
+        model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_{fold}_{val_epochs[fold]}'))
 
-    #for epoch in range(config['epochs']-3):
-    fold = 0
-    model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_{fold}_{er.val_epoch}'))
-    print(f"used_epoch : {er.val_epoch}")
-    logging.debug(f'used_epoch : {er.val_epoch}')
-    log_monitor = er.max_val_monitor if config["mode"] == "min" else er.min_val_monitor
-    logging.debug(f'val_monitor : {log_monitor}')
+        with torch.no_grad():
+            val_preds += [inference_one_epoch(model, val_loader, device)]
+            tst_preds += [inference_one_epoch(model, tst_loader, device)]
 
-    with torch.no_grad():
-        val_preds += [inference_one_epoch(model, val_loader, device)]
-        tst_preds += [inference_one_epoch(model, tst_loader, device)]
-
-    val_preds = np.mean(val_preds, axis=0)
-    val_loss.append(log_loss(valid_.label.values, val_preds))
-    val_acc.append((valid_.label.values == np.argmax(val_preds, axis=1)).mean())
+        val_preds = np.mean(val_preds, axis=0)
+        val_loss.append(log_loss(valid_.label.values, val_preds))
+        val_acc.append((valid_.label.values == np.argmax(val_preds, axis=1)).mean())
 
     print('validation loss = {:.5f}'.format(np.mean(val_loss)))
     print('validation accuracy = {:.5f}'.format(np.mean(val_acc)))
