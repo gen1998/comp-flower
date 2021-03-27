@@ -1,0 +1,15 @@
+DEBUG:root:date : 2021,03/26,22:57:43
+DEBUG:root:img_size_h : 300
+DEBUG:root:img_size_w : 350
+DEBUG:root:train_bs : 128
+DEBUG:root:monitor : val_accuracy
+DEBUG:root:psudo : True
+DEBUG:root:used_epoch : 0
+DEBUG:root:val_monitor : 0.9357142857142857
+DEBUG:root:class
+dandelion    328
+tulip        319
+rose         235
+sunflower    211
+daisy        206
+dtype: int64

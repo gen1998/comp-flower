@@ -1,0 +1,23 @@
+DEBUG:root:date : 2021,03/27,10:36:14
+DEBUG:root:img_size_h : 300
+DEBUG:root:img_size_w : 350
+DEBUG:root:train_bs : 128
+DEBUG:root:monitor : val_accuracy
+DEBUG:root:psudo : True
+DEBUG:root:used_epoch : 0
+DEBUG:root:val_monitor : 0.9345238095238095
+DEBUG:root:used_epoch : 0
+DEBUG:root:val_monitor : 0.8928571428571429
+DEBUG:root:used_epoch : 0
+DEBUG:root:val_monitor : 0.9047619047619048
+DEBUG:root:used_epoch : 0
+DEBUG:root:val_monitor : 0.9070321811680572
+DEBUG:root:used_epoch : 0
+DEBUG:root:val_monitor : 0.9380214541120382
+DEBUG:root:class
+tulip        322
+dandelion    316
+daisy        228
+sunflower    221
+rose         212
+dtype: int64
