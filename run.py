@@ -175,12 +175,13 @@ def main():
         val_preds = np.mean(val_preds, axis=0)
         val_loss.append(log_loss(valid_.label.values, val_preds))
         val_acc.append((valid_.label.values == np.argmax(val_preds, axis=1)).mean())
+        print(np.array(tst_preds.shape))
 
     print('validation loss = {:.5f}'.format(np.mean(val_loss)))
     print('validation accuracy = {:.5f}'.format(np.mean(val_acc)))
-    print(tst_preds.shape)
+    print(np.array(tst_preds.shape))
     tst_preds = np.mean(tst_preds, axis=0)
-    print(tst_preds.shape)
+    print(np.array(tst_preds.shape))
 
     del model
     torch.cuda.empty_cache()
