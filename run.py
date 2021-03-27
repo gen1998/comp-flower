@@ -133,7 +133,7 @@ def main():
             'tulip'
            ]
 
-    print("val_epochs : ", val_epochs[fold])
+    print("val_epochs : ", val_epochs)
     for fold, (trn_idx, val_idx) in enumerate(folds):
         #if fold > 0: # 時間がかかるので最初のモデルのみ
             #break
