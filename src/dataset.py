@@ -218,7 +218,7 @@ def inference_one_epoch(model, data_loader, device):
         imgs = imgs.to(device).float()
 
         image_preds = model.model.global_pool(imgs)   #output = model(input)
-        print(image_preds)
+        print(torch.softmax(image_preds, 1).detach().cpu().numpy().shape)
         image_preds_all += [torch.softmax(image_preds, 1).detach().cpu().numpy()]
 
     image_preds_all = np.concatenate(image_preds_all, axis=0)
