@@ -170,8 +170,8 @@ def main():
         model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_1_6'))
 
         with torch.no_grad():
-            val_preds += [inference_one_epoch(model, val_loader, device)]
-            tst_preds += [inference_one_epoch(model, tst_loader, device)]
+            val_preds += [inference_one_epoch_tsne(model, val_loader, device)]
+            tst_preds += [inference_one_epoch_tsne(model, tst_loader, device)]
 
         val_preds = np.mean(val_preds, axis=0)
         val_loss.append(log_loss(valid_.label.values, val_preds))
