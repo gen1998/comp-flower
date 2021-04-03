@@ -247,7 +247,7 @@ def inference_one_epoch_tsne(model, data_loader, device):
 
         #forwordが呼ばれるたびに呼ばれる
         #image_preds = model.model.bn2(imgs)   #output = model(input)
-        model.bn2.register_forward_hook(get_activation('bn2'))
+        model.model.bn2.register_forward_hook(get_activation('bn2'))
         image_preds = model(imgs)
         print(torch.softmax(image_preds, 1).detach().cpu().numpy())
         image_preds_all += [torch.softmax(image_preds, 1).detach().cpu().numpy()]
