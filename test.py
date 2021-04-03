@@ -63,8 +63,6 @@ def main():
 
 
     tst_preds = []
-    val_loss = []
-    val_acc = []
 
     for fold, (trn_idx, val_idx) in enumerate(folds):
         if fold > 0: # 時間がかかるので最初のモデルのみ
@@ -72,18 +70,7 @@ def main():
 
         input_shape=(config["img_size_h"], config["img_size_w"])
 
-        valid_ = train.loc[val_idx,:].reset_index(drop=True)
-        valid_ds = FlowerDataset(valid_, transforms=get_valid_transforms(input_shape), shape = input_shape, output_label=False)
-
         test_ds = FlowerDataset(test_df, transforms=get_valid_transforms(input_shape), shape=input_shape, output_label=False)
-
-        val_loader = torch.utils.data.DataLoader(
-                valid_ds,
-                batch_size=config['valid_bs'],
-                num_workers=config['num_workers'],
-                shuffle=False,
-                pin_memory=False,
-            )
 
         tst_loader = torch.utils.data.DataLoader(
             test_ds,
@@ -96,18 +83,11 @@ def main():
         device = torch.device(config['device'])
         model = FlowerImgClassifier(config['model_arch'], train.label.nunique(), config["model_shape"]).to(device)
 
-        val_preds = []
-
         model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_1_6'))
 
         with torch.no_grad():
-            val_preds += [inference_one_epoch(model, val_loader, device)]
             tst_preds += [inference_one_epoch(model, tst_loader, device)]
 
-        val_preds = np.mean(val_preds, axis=0)
-        val_loss.append(log_loss(valid_.label.values, val_preds))
-        val_acc.append((valid_.label.values == np.argmax(val_preds, axis=1)).mean())
-        #print(np.array(tst_preds).shape)
 
 
 
