@@ -1,7 +1,13 @@
-from torch import nn
-import pandas as pd
+import os
 import argparse
+import datetime
+import logging
 import json
+import pandas as pd
+import os
+import torch
+from torch import nn
+
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import  log_loss
 
@@ -15,6 +21,16 @@ def main():
     parser.add_argument('--config', default='./config/default.json')
     options = parser.parse_args()
     config = json.load(open(options.config))
+
+    # log file
+    now = datetime.datetime.now()
+    logging.basicConfig(
+        filename='./logs/log_' + config["model_arch"] + '_'+ '{0:%Y%m%d%H%M%S}.log'.format(now), level=logging.DEBUG
+    )
+    logging.debug('date : {0:%Y,%m/%d,%H:%M:%S}'.format(now))
+    log_list = ["img_size_h", "img_size_w", "train_bs", "monitor"]
+    for log_c in log_list:
+        logging.debug(f"{log_c} : {config[log_c]}")
 
     # train 用 df の作成
     train_df = pd.DataFrame()
@@ -37,6 +53,7 @@ def main():
         psudo = pd.read_csv("./flowers-recognition/psudo.csv")
         train_df = pd.concat([train_df, psudo])
 
+    logging.debug(f'psudo : {config["psudo"]}')
     train_df = train_df.reset_index(drop=True)
 
     # test 用 df の作成
@@ -54,6 +71,48 @@ def main():
     train = train_df
     seed_everything(config['seed'])
     device = torch.device(config['device'])
+    val_epochs = []
+
+    folds = StratifiedKFold(n_splits=config['fold_num'], shuffle=True, random_state=config['seed']).split(np.arange(train.shape[0]), train.label.values)
+    for fold, (trn_idx, val_idx) in enumerate(folds):
+
+        if fold > 0: # 時間がかかるので最初のモデルのみ
+            break
+
+        print(f'Training with fold {fold} started (train:{len(trn_idx)}, val:{len(val_idx)})')
+
+        train_loader, val_loader = prepare_dataloader(train, (config["img_size_h"], config["img_size_w"]), trn_idx, val_idx, train_bs=config["train_bs"], valid_bs=config["valid_bs"], num_workers=config["num_workers"] )
+        model = FlowerImgClassifier(config['model_arch'], train.label.nunique(), config["model_shape"], pretrained=True).to(device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'], weight_decay=config['weight_decay'])
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=config['T_0'], T_mult=1, eta_min=config['min_lr'], last_epoch=-1)
+        er = EarlyStopping(config['patience'])
+
+        loss_tr = nn.CrossEntropyLoss().to(device)
+        loss_fn = nn.CrossEntropyLoss().to(device)
+
+        for epoch in range(config['epochs']):
+            train_one_epoch(epoch, model, loss_tr, optimizer, train_loader, device, config['verbose_step'],scheduler=scheduler, schd_batch_update=False)
+
+            with torch.no_grad():
+                monitor = valid_one_epoch(epoch, model, loss_fn, val_loader, device, config['verbose_step'], scheduler=None, schd_loss_update=False)
+
+            # Early Stopiing
+            if er.update(monitor[config["monitor"]], epoch, config["mode"]) < 0:
+                break
+
+            if epoch == er.val_epoch:
+                torch.save(model.state_dict(),f'save/{config["model_arch"]}_fold_{fold}_{epoch}')
+
+        val_epochs.append(er.val_epoch)
+        del model, optimizer, train_loader, val_loader,  scheduler
+        torch.cuda.empty_cache()
+        print("\n")
+
+        logging.debug(f'used_epoch : {er.val_epoch}')
+        log_monitor = er.max_val_monitor if config["mode"] == "min" else er.min_val_monitor
+        logging.debug(f'val_monitor : {log_monitor}')
+
+        print("pred start")
 
     # infer
     train = train_df
@@ -63,14 +122,37 @@ def main():
 
 
     tst_preds = []
+    val_loss = []
+    val_acc = []
 
+    # 行数を揃えた空のデータフレームを作成
+    cols = ['daisy',
+            'dandelion',
+            'rose',
+            'sunflower',
+            'tulip'
+           ]
+
+    print("val_epochs : ", val_epochs)
     for fold, (trn_idx, val_idx) in enumerate(folds):
         if fold > 0: # 時間がかかるので最初のモデルのみ
             break
 
+        print(' fold {} started'.format(fold))
         input_shape=(config["img_size_h"], config["img_size_w"])
 
+        valid_ = train.loc[val_idx,:].reset_index(drop=True)
+        valid_ds = FlowerDataset(valid_, transforms=get_valid_transforms(input_shape), shape = input_shape, output_label=False)
+
         test_ds = FlowerDataset(test_df, transforms=get_valid_transforms(input_shape), shape=input_shape, output_label=False)
+
+        val_loader = torch.utils.data.DataLoader(
+                valid_ds,
+                batch_size=config['valid_bs'],
+                num_workers=config['num_workers'],
+                shuffle=False,
+                pin_memory=False,
+            )
 
         tst_loader = torch.utils.data.DataLoader(
             test_ds,
@@ -83,11 +165,41 @@ def main():
         device = torch.device(config['device'])
         model = FlowerImgClassifier(config['model_arch'], train.label.nunique(), config["model_shape"]).to(device)
 
+        val_preds = []
+
         model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_1_6'))
 
         with torch.no_grad():
+            val_preds += [inference_one_epoch(model, val_loader, device)]
             tst_preds += [inference_one_epoch(model, tst_loader, device)]
 
+        val_preds = np.mean(val_preds, axis=0)
+        val_loss.append(log_loss(valid_.label.values, val_preds))
+        val_acc.append((valid_.label.values == np.argmax(val_preds, axis=1)).mean())
+        #print(np.array(tst_preds).shape)
+
+    print('validation loss = {:.5f}'.format(np.mean(val_loss)))
+    print('validation accuracy = {:.5f}'.format(np.mean(val_acc)))
+    #print(np.array(tst_preds).shape)
+    tst_preds = np.mean(tst_preds, axis=0)
+    #print(np.array(tst_preds).shape)
+
+    del model
+    torch.cuda.empty_cache()
+    tst_preds_label_all = np.argmax(tst_preds, axis=1)
+
+    # 予測結果を保存
+    sub = pd.read_csv("./flowers-recognition/sample_submission.csv")
+    sub_en = pd.read_csv("./flowers-recognition/sample_submission.csv")
+    sub['class'] = tst_preds_label_all
+    for i, label in enumerate(train_data_labels):
+        sub_en["{}".format(label)] = tst_preds[:, i]
+    label_dic = {0:"daisy", 1:"dandelion", 2:"rose",3:"sunflower", 4:"tulip"}
+    sub["class"] = sub["class"].map(label_dic)
+    print(sub.value_counts("class"))
+    logging.debug(sub.value_counts("class"))
+    #sub.to_csv(f'output/{config["model_arch"]}_'+ '{0:%Y%m%d%H%M%S}'.format(now) + '_submission.csv', index=False)
+    sub_en.to_csv(f'output/{config["model_arch"]}_'+ '{0:%Y%m%d%H%M%S}'.format(now) + '_preds.csv', index=False)
 
 
 
