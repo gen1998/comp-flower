@@ -98,7 +98,7 @@ def main():
 
         val_preds = []
 
-        model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_1_7'))
+        model.load_state_dict(torch.load(f'save/{config["model_arch"]}_fold_1_6'))
 
         with torch.no_grad():
             val_preds += [inference_one_epoch(model, val_loader, device)]
