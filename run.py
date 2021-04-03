@@ -76,8 +76,8 @@ def main():
     folds = StratifiedKFold(n_splits=config['fold_num'], shuffle=True, random_state=config['seed']).split(np.arange(train.shape[0]), train.label.values)
     for fold, (trn_idx, val_idx) in enumerate(folds):
 
-        #if fold > 0: # 時間がかかるので最初のモデルのみ
-            #break
+        if fold > 0: # 時間がかかるので最初のモデルのみ
+            break
 
         print(f'Training with fold {fold} started (train:{len(trn_idx)}, val:{len(val_idx)})')
 
@@ -135,8 +135,8 @@ def main():
 
     print("val_epochs : ", val_epochs)
     for fold, (trn_idx, val_idx) in enumerate(folds):
-        #if fold > 0: # 時間がかかるので最初のモデルのみ
-            #break
+        if fold > 0: # 時間がかかるので最初のモデルのみ
+            break
 
         print(' fold {} started'.format(fold))
         input_shape=(config["img_size_h"], config["img_size_w"])
