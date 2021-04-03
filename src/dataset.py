@@ -234,15 +234,21 @@ def inference_one_epoch_tsne(model, data_loader, device):
     model.eval()
     image_preds_all = []
     pbar = tqdm(enumerate(data_loader), total=len(data_loader))
-    tmp_model = model
-    tmp_model.conv_hea = Identity()
+
+    activation = {}
+    def get_activation(name):
+        def hook(model, input, output):
+            activation[name] = output.detach()
+        return hook
+
 
     for step, (imgs) in pbar:
         imgs = imgs.to(device).float()
 
         #forwordが呼ばれるたびに呼ばれる
         #image_preds = model.model.bn2(imgs)   #output = model(input)
-        image_preds = tmp_model(imgs)
+        model.bn2.register_forward_hook(get_activation('bn2'))
+        image_preds = model(imgs)
         print(torch.softmax(image_preds, 1).detach().cpu().numpy())
         image_preds_all += [torch.softmax(image_preds, 1).detach().cpu().numpy()]
 
