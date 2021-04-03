@@ -10,6 +10,7 @@ from torch import nn
 
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import  log_loss
+from sklearn.manifold import TSNE
 
 from src.augmentation import *
 from src.dataset import *
@@ -173,26 +174,17 @@ def main():
             #val_preds += [inference_one_epoch_tsne(model, val_loader, device)]
             tst_preds += [inference_one_epoch_tsne(model, tst_loader, device)]
 
-    tst_preds = np.mean(tst_preds, axis=0)
+    dims = 2
+    layer_size = 4096
+    tsne = TSNE(n_components=dims)
+    tsne_result = tsne.fit_transform(tst_preds)
+    print(tsne_result.shape)
+
+    np.save(f"save/sum_{dims}dim_pool", tsne_result)
+
 
     del model
     torch.cuda.empty_cache()
-    tst_preds_label_all = np.argmax(tst_preds, axis=1)
-
-    # 予測結果を保存
-    sub = pd.read_csv("./flowers-recognition/sample_submission.csv")
-    sub_en = pd.read_csv("./flowers-recognition/sample_submission.csv")
-    sub['class'] = tst_preds_label_all
-    for i, label in enumerate(train_data_labels):
-        sub_en["{}".format(label)] = tst_preds[:, i]
-    label_dic = {0:"daisy", 1:"dandelion", 2:"rose",3:"sunflower", 4:"tulip"}
-    sub["class"] = sub["class"].map(label_dic)
-    print(sub.value_counts("class"))
-    logging.debug(sub.value_counts("class"))
-    #sub.to_csv(f'output/{config["model_arch"]}_'+ '{0:%Y%m%d%H%M%S}'.format(now) + '_submission.csv', index=False)
-    sub_en.to_csv(f'output/{config["model_arch"]}_'+ '{0:%Y%m%d%H%M%S}'.format(now) + '_preds.csv', index=False)
-
-
 
 if __name__ == '__main__':
     main()

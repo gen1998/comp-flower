@@ -245,13 +245,8 @@ def inference_one_epoch_tsne(model, data_loader, device):
     for step, (imgs) in pbar:
         imgs = imgs.to(device).float()
 
-        #forwordが呼ばれるたびに呼ばれる
-        #image_preds = model.model.bn2(imgs)   #output = model(input)
         model.model.global_pool.register_forward_hook(get_activation('act2'))
         image_preds = model(imgs)
-        print(torch.softmax(activation["act2"], 1).detach().cpu().numpy().shape)
-        #print(torch.softmax(image_preds, 1).detach().cpu().numpy().shape)
-        #print(torch.softmax(image_preds, 1).detach().cpu().numpy().shape)
         image_preds_all += [torch.softmax(activation["act2"], 1).detach().cpu().numpy()]
 
     image_preds_all = np.concatenate(image_preds_all, axis=0)
