@@ -235,7 +235,7 @@ def inference_one_epoch_tsne(model, data_loader, device):
     image_preds_all = []
     pbar = tqdm(enumerate(data_loader), total=len(data_loader))
     tmp_model = model
-    tmp_model.conv_head = Identity()
+    tmp_model.conv_hea = Identity()
 
     for step, (imgs) in pbar:
         imgs = imgs.to(device).float()
