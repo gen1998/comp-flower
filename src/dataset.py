@@ -71,7 +71,7 @@ class FlowerImgClassifier(nn.Module):
             self.model.fc = nn.Linear(n_features, n_class)
 
     def forward(self, x):
-        x = self.model(x)
+        x = self.model.bn2(x)
         return x
 
 class EarlyStopping:
@@ -211,6 +211,19 @@ def valid_one_epoch(epoch, model, loss_fn, val_loader, device, verbose_step, sch
 
 
 def inference_one_epoch(model, data_loader, device):
+    model.eval()
+    image_preds_all = []
+    pbar = tqdm(enumerate(data_loader), total=len(data_loader))
+    for step, (imgs) in pbar:
+        imgs = imgs.to(device).float()
+
+        image_preds = model(imgs)   #output = model(input)
+        image_preds_all += [torch.softmax(image_preds, 1).detach().cpu().numpy()]
+
+    image_preds_all = np.concatenate(image_preds_all, axis=0)
+    return image_preds_all
+
+def inference_one_epoch_tsne(model, data_loader, device):
     model.eval()
     image_preds_all = []
     pbar = tqdm(enumerate(data_loader), total=len(data_loader))
