@@ -250,5 +250,4 @@ def inference_one_epoch_tsne(model, data_loader, device):
         image_preds_all += [torch.softmax(activation["act2"], 1).detach().cpu().numpy()]
 
     image_preds_all = np.concatenate(image_preds_all, axis=0)
-    print(image_preds_all.shape)
     return image_preds_all

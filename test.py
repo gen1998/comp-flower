@@ -174,6 +174,7 @@ def main():
             #val_preds += [inference_one_epoch_tsne(model, val_loader, device)]
             tst_preds += [inference_one_epoch_tsne(model, tst_loader, device)]
 
+    tst_preds = np.array(tst_preds)
     print(tst_preds.shape)
     dims = 2
     layer_size = 4096
