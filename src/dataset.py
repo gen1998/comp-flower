@@ -217,7 +217,7 @@ def inference_one_epoch(model, data_loader, device):
     for step, (imgs) in pbar:
         imgs = imgs.to(device).float()
 
-        image_preds = model.model.global_pool(imgs)   #output = model(input)
+        image_preds = model.model.bn2(imgs)   #output = model(input)
         print(torch.softmax(image_preds, 1).detach().cpu().numpy().shape)
         image_preds_all += [torch.softmax(image_preds, 1).detach().cpu().numpy()]
 
